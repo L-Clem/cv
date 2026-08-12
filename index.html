@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>Resume - Clément LAFON</title>
 
@@ -16,13 +17,18 @@
 
     <meta
         property="og:image"
-        content="https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=1200&h=630&q=70"
+        content="https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?fm=jpg&fit=crop&w=1200&h=630&q=70"
     >
-
     <meta property="og:title" content="LAFON Clément's resume">
     <meta property="og:description" content="LAFON Clément's resume.">
 
     <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
         html,
         body {
             margin: 0;
@@ -32,24 +38,39 @@
             overflow: hidden;
         }
 
-        iframe {
+        #pdf {
             position: fixed;
             inset: 0;
-            width: 100vw;
-            height: 100dvh;
-            margin: 0;
-            padding: 0;
-            border: 0;
             display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
         }
     </style>
 </head>
 
 <body>
+
     <iframe
-        src="./assets/pdf/resume.pdf#zoom=page-fit"
+        id="pdf"
+        src="./assets/pdf/Clement_LAFON_english_resume.pdf"
         title="Clément LAFON's Resume">
     </iframe>
-</body>
 
+    <script>
+        const pdf = "./assets/pdf/Clement_LAFON_english_resume.pdf";
+
+        const isIOS =
+            /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+            (
+                navigator.platform === "MacIntel" &&
+                navigator.maxTouchPoints > 1
+            );
+
+        if (isIOS) {
+            window.location.replace(pdf);
+        }
+    </script>
+
+</body>
 </html>
