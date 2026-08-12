@@ -11,16 +11,57 @@
 
     <title>Resume - Clément LAFON</title>
 
-    <meta name="description" content="LAFON Clément's resume.">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="theme-color" content="#E7F8FF">
+    <meta
+        name="description"
+        content="LAFON Clément's resume."
+    >
 
-    <link rel="canonical" href="https://l-clem.github.io/cv/">
+    <meta
+        name="format-detection"
+        content="telephone=no"
+    >
+
+    <meta
+        name="theme-color"
+        content="#E7F8FF"
+    >
+
+    <link
+        rel="canonical"
+        href="https://l-clem.github.io/"
+    >
+
+    <!-- Favicons -->
     <link
         rel="icon"
         type="image/png"
-        sizes="16x16"
-        href="./assets/img/favicon.png"
+        href="/assets/img/favicon.png?v=2"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        href="/assets/img/favicon.png?v=2"
+    >
+
+    <!-- Open Graph -->
+    <meta
+        property="og:title"
+        content="LAFON Clément's resume"
+    >
+
+    <meta
+        property="og:description"
+        content="LAFON Clément's resume."
+    >
+
+    <meta
+        property="og:type"
+        content="website"
+    >
+
+    <meta
+        property="og:url"
+        content="https://l-clem.github.io/"
     >
 
     <meta
@@ -28,12 +69,9 @@
         content="https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?fm=jpg&fit=crop&w=1200&h=630&q=70"
     >
 
-    <meta property="og:title" content="LAFON Clément's resume">
-    <meta property="og:description" content="LAFON Clément's resume.">
-
+    <!-- HTMX -->
     <script
         src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js"
-        integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V"
         crossorigin="anonymous">
     </script>
 
@@ -45,8 +83,7 @@
         }
 
         html,
-        body,
-        #app {
+        body {
             margin: 0;
             padding: 0;
 
@@ -54,6 +91,12 @@
             height: 100%;
 
             overflow: hidden;
+
+            background: #ffffff;
+        }
+
+        html {
+            overscroll-behavior: none;
         }
 
         body {
@@ -61,27 +104,50 @@
             inset: 0;
 
             width: 100vw;
+
+            /* Fallback ancien navigateur */
+            height: 100vh;
+
+            /* Navigateurs modernes */
             height: 100dvh;
 
+            overflow: hidden;
+
             overscroll-behavior: none;
-            background: #fff;
         }
 
         #app {
             position: absolute;
             inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            overflow: hidden;
         }
 
         .pdf-viewer {
+            position: absolute;
+            inset: 0;
+
             display: block;
 
             width: 100%;
             height: 100%;
 
+            margin: 0;
+            padding: 0;
+
             border: 0;
+            outline: 0;
+
+            background: #ffffff;
         }
 
         .fallback {
+            position: fixed;
+            inset: 0;
+
             display: flex;
             align-items: center;
             justify-content: center;
@@ -90,99 +156,258 @@
             height: 100%;
 
             padding:
-                env(safe-area-inset-top)
-                env(safe-area-inset-right)
-                env(safe-area-inset-bottom)
-                env(safe-area-inset-left);
+                max(24px, env(safe-area-inset-top))
+                max(24px, env(safe-area-inset-right))
+                max(24px, env(safe-area-inset-bottom))
+                max(24px, env(safe-area-inset-left));
 
             font-family:
                 -apple-system,
                 BlinkMacSystemFont,
                 "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
                 sans-serif;
 
             text-align: center;
+
+            background: #ffffff;
+        }
+
+        .fallback-content {
+            max-width: 420px;
+        }
+
+        .fallback a {
+            display: inline-block;
+
+            margin-top: 12px;
+            padding: 12px 18px;
+
+            color: #ffffff;
+            text-decoration: none;
+
+            background: #111111;
+
+            border-radius: 6px;
         }
     </style>
 </head>
 
 <body>
 
-    <main
-        id="app"
-        hx-get="./assets/html/pdf-viewer.html"
-        hx-trigger="pdf:load"
-        hx-swap="innerHTML">
-    </main>
+    <main id="app"></main>
+
+    <noscript>
+        <div class="fallback">
+            <div class="fallback-content">
+                <p>
+                    JavaScript is required to display this resume.
+                </p>
+
+                <a href="/assets/pdf/resume.pdf">
+                    Open resume
+                </a>
+            </div>
+        </div>
+    </noscript>
 
     <script>
         (() => {
             const PDF_URL =
-                "./assets/pdf/resume.pdf";
+                "/assets/pdf/resume.pdf";
 
-            const ua = navigator.userAgent || "";
+            const VIEWER_URL =
+                "/assets/html/pdf-viewer.html";
 
+            const app =
+                document.getElementById("app");
+
+
+            /*
+             * --------------------------------------------------
+             * Device detection
+             * --------------------------------------------------
+             */
+
+            const userAgent =
+                navigator.userAgent || "";
+
+
+            /*
+             * iPhone / iPad / iPod
+             *
+             * Le second test couvre les iPad récents qui peuvent
+             * s'identifier comme des Mac.
+             */
             const isIOS =
-                /iPhone|iPad|iPod/i.test(ua) ||
+                /iPhone|iPad|iPod/i.test(userAgent) ||
                 (
                     navigator.platform === "MacIntel" &&
                     navigator.maxTouchPoints > 1
                 );
 
-            const isAndroid =
-                /Android/i.test(ua);
 
+            const isAndroid =
+                /Android/i.test(userAgent);
+
+
+            /*
+             * API moderne lorsqu'elle est disponible.
+             */
+            const isMobileUA =
+                navigator.userAgentData?.mobile === true;
+
+
+            /*
+             * Fallback pour appareils tactiles / tablettes.
+             */
             const coarsePointer =
-                window.matchMedia("(pointer: coarse)").matches;
+                window.matchMedia(
+                    "(pointer: coarse)"
+                ).matches;
 
             const smallScreen =
-                window.matchMedia("(max-width: 900px)").matches;
+                window.matchMedia(
+                    "(max-width: 900px)"
+                ).matches;
 
-            const problematicEmbeddedViewer =
+
+            const isMobileOrTablet =
                 isIOS ||
                 isAndroid ||
-                (coarsePointer && smallScreen);
+                isMobileUA ||
+                (
+                    coarsePointer &&
+                    smallScreen
+                );
 
-            const pdfViewerDisabled =
-                "pdfViewerEnabled" in navigator &&
-                navigator.pdfViewerEnabled === false;
-
-            /*
-             * Mobile / tablette :
-             * utilisation de la visionneuse PDF native.
-             */
-            if (problematicEmbeddedViewer) {
-                window.location.replace(PDF_URL);
-                return;
-            }
 
             /*
-             * Pas de lecteur PDF intégré :
-             * affiche un fallback.
+             * --------------------------------------------------
+             * Fallback
+             * --------------------------------------------------
              */
-            if (pdfViewerDisabled) {
-                document.querySelector("#app").innerHTML = `
+
+            const showFallback = () => {
+                app.innerHTML = `
                     <div class="fallback">
-                        <div>
+                        <div class="fallback-content">
+
                             <p>
-                                Your browser cannot display the PDF.
+                                Your browser cannot display the resume correctly.
                             </p>
 
                             <a href="${PDF_URL}">
                                 Open resume
                             </a>
+
                         </div>
                     </div>
                 `;
+            };
 
+
+            /*
+             * --------------------------------------------------
+             * Mobile / tablet
+             * --------------------------------------------------
+             *
+             * On n'utilise volontairement pas d'iframe PDF.
+             *
+             * Cela évite notamment :
+             *
+             * - overflow Safari iOS
+             * - double scrolling
+             * - mauvais calcul du viewport
+             * - zoom incorrect
+             * - problèmes après rotation
+             * - viewer PDF imbriqué
+             */
+
+            if (isMobileOrTablet) {
+                window.location.replace(PDF_URL);
                 return;
             }
 
+
             /*
-             * Desktop :
-             * demande à HTMX de charger le fragment PDF.
+             * --------------------------------------------------
+             * PDF viewer support
+             * --------------------------------------------------
              */
-            htmx.trigger("#app", "pdf:load");
+
+            if (
+                "pdfViewerEnabled" in navigator &&
+                navigator.pdfViewerEnabled === false
+            ) {
+                showFallback();
+                return;
+            }
+
+
+            /*
+             * --------------------------------------------------
+             * Desktop
+             * --------------------------------------------------
+             *
+             * HTMX charge le fragment contenant l'iframe.
+             *
+             * On utilise directement htmx.ajax() plutôt qu'un
+             * hx-trigger custom afin d'éviter que l'événement soit
+             * déclenché avant que HTMX ait fini d'initialiser la page.
+             */
+
+            const loadDesktopViewer = () => {
+                if (typeof htmx === "undefined") {
+                    showFallback();
+                    return;
+                }
+
+                htmx.ajax(
+                    "GET",
+                    VIEWER_URL,
+                    {
+                        target: "#app",
+                        swap: "innerHTML"
+                    }
+                );
+            };
+
+
+            /*
+             * Attend que le DOM soit complètement disponible.
+             */
+            if (document.readyState === "loading") {
+                document.addEventListener(
+                    "DOMContentLoaded",
+                    loadDesktopViewer,
+                    {
+                        once: true
+                    }
+                );
+            } else {
+                loadDesktopViewer();
+            }
+
+
+            /*
+             * --------------------------------------------------
+             * HTMX error handling
+             * --------------------------------------------------
+             */
+
+            document.body.addEventListener(
+                "htmx:responseError",
+                showFallback
+            );
+
+            document.body.addEventListener(
+                "htmx:sendError",
+                showFallback
+            );
+
         })();
     </script>
 
