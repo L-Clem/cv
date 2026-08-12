@@ -3,8 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
 
     <title>Resume - Clément LAFON</title>
 
@@ -13,12 +16,18 @@
     <meta name="theme-color" content="#E7F8FF">
 
     <link rel="canonical" href="https://l-clem.github.io/cv/">
-    <link rel="icon" type="image/png" sizes="16x16" href="./assets/img/favicon.png">
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="16x16"
+        href="./assets/img/favicon.png"
+    >
 
     <meta
         property="og:image"
         content="https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?fm=jpg&fit=crop&w=1200&h=630&q=70"
     >
+
     <meta property="og:title" content="LAFON Clément's resume">
     <meta property="og:description" content="LAFON Clément's resume.">
 
@@ -29,22 +38,104 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --viewport-height: 100vh;
+        }
+
+        @supports (height: 100dvh) {
+            :root {
+                --viewport-height: 100dvh;
+            }
+        }
+
         html,
         body {
             margin: 0;
             padding: 0;
+
             width: 100%;
             height: 100%;
+
             overflow: hidden;
+            overscroll-behavior: none;
+
+            background: #ffffff;
         }
 
-        #pdf {
+        body {
             position: fixed;
             inset: 0;
+
+            width: 100vw;
+            height: var(--viewport-height);
+
+            touch-action: manipulation;
+        }
+
+        #pdf-viewer {
+            position: absolute;
+            inset: 0;
+
             display: block;
+
             width: 100%;
             height: 100%;
+
+            margin: 0;
+            padding: 0;
+
             border: 0;
+            outline: 0;
+
+            background: #ffffff;
+        }
+
+        #fallback {
+            position: fixed;
+            inset: 0;
+
+            display: none;
+            align-items: center;
+            justify-content: center;
+
+            width: 100%;
+            height: var(--viewport-height);
+
+            padding:
+                env(safe-area-inset-top)
+                env(safe-area-inset-right)
+                env(safe-area-inset-bottom)
+                env(safe-area-inset-left);
+
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            text-align: center;
+
+            background: #ffffff;
+        }
+
+        #fallback.visible {
+            display: flex;
+        }
+
+        #fallback-content {
+            padding: 24px;
+        }
+
+        #fallback a {
+            display: inline-block;
+
+            padding: 12px 18px;
+
+            color: #ffffff;
+            text-decoration: none;
+
+            background: #111111;
+            border-radius: 6px;
         }
     </style>
 </head>
@@ -52,25 +143,246 @@
 <body>
 
     <iframe
-        id="pdf"
-        src="./assets/pdf/Clement_LAFON_english_resume.pdf"
-        title="Clément LAFON's Resume">
+        id="pdf-viewer"
+        title="Clément LAFON's Resume"
+        loading="eager">
     </iframe>
 
-    <script>
-        const pdf = "./assets/pdf/Clement_LAFON_english_resume.pdf";
+    <div id="fallback">
+        <div id="fallback-content">
+            <p>
+                Your browser cannot display the PDF correctly.
+            </p>
 
-        const isIOS =
-            /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-            (
-                navigator.platform === "MacIntel" &&
-                navigator.maxTouchPoints > 1
+            <a
+                id="fallback-link"
+                href="./assets/pdf/cv.pdf">
+                Open resume
+            </a>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const PDF_URL =
+                "./assets/pdf/cvGa.pdf";
+
+            const viewer =
+                document.getElementById("pdf-viewer");
+
+            const fallback =
+                document.getElementById("fallback");
+
+            const fallbackLink =
+                document.getElementById("fallback-link");
+
+
+            /*
+             * --------------------------------------------------
+             * Viewport
+             * --------------------------------------------------
+             *
+             * Fallback pour les navigateurs ne gérant pas
+             * correctement 100dvh.
+             */
+
+            const updateViewportHeight = () => {
+                document.documentElement.style.setProperty(
+                    "--viewport-height",
+                    `${window.innerHeight}px`
+                );
+            };
+
+            updateViewportHeight();
+
+            window.addEventListener(
+                "resize",
+                updateViewportHeight,
+                { passive: true }
             );
 
-        if (isIOS) {
-            window.location.replace(pdf);
-        }
+            window.addEventListener(
+                "orientationchange",
+                updateViewportHeight,
+                { passive: true }
+            );
+
+
+            /*
+             * --------------------------------------------------
+             * Device detection
+             * --------------------------------------------------
+             */
+
+            const userAgent =
+                navigator.userAgent || "";
+
+            const isIOS =
+                /iPad|iPhone|iPod/.test(userAgent) ||
+                (
+                    navigator.platform === "MacIntel" &&
+                    navigator.maxTouchPoints > 1
+                );
+
+            const isAndroid =
+                /Android/i.test(userAgent);
+
+            const isMobileUA =
+                navigator.userAgentData?.mobile === true;
+
+            const isSmallTouchDevice =
+                window.matchMedia(
+                    "(max-width: 900px) and (pointer: coarse)"
+                ).matches;
+
+            const isMobile =
+                isIOS ||
+                isAndroid ||
+                isMobileUA ||
+                isSmallTouchDevice;
+
+
+            /*
+             * --------------------------------------------------
+             * PDF viewer support
+             * --------------------------------------------------
+             */
+
+            const pdfViewerExplicitlyDisabled =
+                "pdfViewerEnabled" in navigator &&
+                navigator.pdfViewerEnabled === false;
+
+
+            /*
+             * --------------------------------------------------
+             * Fallback
+             * --------------------------------------------------
+             */
+
+            const showFallback = () => {
+                viewer.remove();
+
+                fallbackLink.href = PDF_URL;
+                fallback.classList.add("visible");
+            };
+
+
+            /*
+             * --------------------------------------------------
+             * Check PDF availability
+             * --------------------------------------------------
+             */
+
+            const checkPdf = async () => {
+                try {
+                    const response = await fetch(
+                        PDF_URL,
+                        {
+                            method: "HEAD",
+                            cache: "no-store"
+                        }
+                    );
+
+                    return response.ok;
+                } catch {
+                    /*
+                     * Certains serveurs refusent HEAD alors que
+                     * GET fonctionne parfaitement.
+                     *
+                     * On ne considère donc pas automatiquement
+                     * cela comme une erreur fatale.
+                     */
+                    return true;
+                }
+            };
+
+
+            /*
+             * --------------------------------------------------
+             * Main
+             * --------------------------------------------------
+             */
+
+            const init = async () => {
+                const pdfAvailable =
+                    await checkPdf();
+
+                if (!pdfAvailable) {
+                    showFallback();
+                    return;
+                }
+
+
+                /*
+                 * Mobile / tablette
+                 *
+                 * Évite :
+                 * - overflow Safari iOS
+                 * - iframe PDF mal dimensionnée
+                 * - double scrolling
+                 * - zoom incorrect
+                 * - problèmes de rotation
+                 * - visual viewport différent du layout viewport
+                 */
+
+                if (isMobile) {
+                    window.location.replace(PDF_URL);
+                    return;
+                }
+
+
+                /*
+                 * Navigateur indiquant explicitement qu'il
+                 * ne possède pas de lecteur PDF intégré.
+                 */
+
+                if (pdfViewerExplicitlyDisabled) {
+                    showFallback();
+                    return;
+                }
+
+
+                /*
+                 * Desktop
+                 */
+
+                viewer.src =
+                    `${PDF_URL}#view=FitH`;
+
+
+                /*
+                 * Dernier fallback :
+                 *
+                 * Si quelque chose bloque complètement le viewer,
+                 * le lien direct reste disponible.
+                 */
+
+                const timeout =
+                    window.setTimeout(
+                        () => {
+                            if (!viewer.contentWindow) {
+                                showFallback();
+                            }
+                        },
+                        4000
+                    );
+
+                viewer.addEventListener(
+                    "load",
+                    () => {
+                        window.clearTimeout(timeout);
+                    },
+                    {
+                        once: true
+                    }
+                );
+            };
+
+
+            init();
+        })();
     </script>
 
 </body>
+
 </html>
